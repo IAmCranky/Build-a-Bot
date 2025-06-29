@@ -5,46 +5,46 @@ const axios = require('axios');
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('merge-pdf')
-        .setDescription('Merge PDF files (attach up to 10 PDFs)')
+        .setDescription('Merge 2-10 PDF files (attach as many as you need)')
         .addAttachmentOption(option => 
             option.setName('pdf1')
-                .setDescription('First PDF file')
+                .setDescription('PDF file 1')
                 .setRequired(true))
         .addAttachmentOption(option => 
             option.setName('pdf2')
-                .setDescription('Second PDF file')
+                .setDescription('PDF file 2')
                 .setRequired(true))
         .addAttachmentOption(option => 
             option.setName('pdf3')
-                .setDescription('Third PDF file')
+                .setDescription('PDF file 3')
                 .setRequired(false))
         .addAttachmentOption(option => 
             option.setName('pdf4')
-                .setDescription('Fourth PDF file')
+                .setDescription('PDF file 4')
                 .setRequired(false))
         .addAttachmentOption(option => 
             option.setName('pdf5')
-                .setDescription('Fifth PDF file')
+                .setDescription('PDF file 5')
                 .setRequired(false))
         .addAttachmentOption(option => 
             option.setName('pdf6')
-                .setDescription('Sixth PDF file')
+                .setDescription('PDF file 6')
                 .setRequired(false))
         .addAttachmentOption(option => 
             option.setName('pdf7')
-                .setDescription('Seventh PDF file')
+                .setDescription('PDF file 7')
                 .setRequired(false))
         .addAttachmentOption(option => 
             option.setName('pdf8')
-                .setDescription('Eighth PDF file')
+                .setDescription('PDF file 8')
                 .setRequired(false))
         .addAttachmentOption(option => 
             option.setName('pdf9')
-                .setDescription('Ninth PDF file')
+                .setDescription('PDF file 9')
                 .setRequired(false))
         .addAttachmentOption(option => 
             option.setName('pdf10')
-                .setDescription('Tenth PDF file')
+                .setDescription('PDF file 10')
                 .setRequired(false)),
 
     async execute(interaction) {
@@ -69,8 +69,9 @@ module.exports = {
         try {
             const mergedPdf = await PDFDocument.create();
             
-            for (const pdf of pdfs) {
-                console.log(`Processing: ${pdf.name}`);
+            for (let i = 0; i < pdfs.length; i++) {
+                const pdf = pdfs[i];
+                console.log(`Processing ${i + 1}/${pdfs.length}: ${pdf.name}`);
                 
                 const response = await axios.get(pdf.url, { 
                     responseType: 'arraybuffer',
@@ -86,11 +87,11 @@ module.exports = {
 
             const pdfBytes = await mergedPdf.save();
             const attachment = new AttachmentBuilder(Buffer.from(pdfBytes), { 
-                name: `merged_${Date.now()}.pdf` 
+                name: `merged_${pdfs.length}_files_${Date.now()}.pdf` 
             });
 
             await interaction.editReply({
-                content: `✅ Successfully merged ${pdfs.length} PDF files!`,
+                content: `✅ Successfully merged ${pdfs.length} PDF files into one document!`,
                 files: [attachment]
             });
 
