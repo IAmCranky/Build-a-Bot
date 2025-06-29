@@ -5,7 +5,7 @@ const axios = require('axios');
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('merge-pdf')
-        .setDescription('Merge 2-10 PDF files (attach as many as you need)')
+        .setDescription('Merge 2-10 PDF files')
         .addAttachmentOption(option => 
             option.setName('pdf1')
                 .setDescription('PDF file 1')
