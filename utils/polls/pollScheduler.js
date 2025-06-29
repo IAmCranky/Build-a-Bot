@@ -5,6 +5,7 @@ const { createPollButtons } = require('./pollButtons');
 const { generatePollId, createPollData } = require('./pollHelpers');
 const { endPollById } = require('../../events/pollInteractionHandler');
 const pollTemplates = require('../../config/pollTemplates');
+const { DateTime } = require("luxon");
 
 class PollScheduler {
     constructor() {
@@ -36,22 +37,19 @@ class PollScheduler {
     }
 
     getNextScheduleTime(schedule) {
-        const now = new Date();
-        const next = new Date();
-        
-        // Set to the specified day of week
-        const daysUntilTarget = (schedule.dayOfWeek - now.getDay() + 7) % 7;
-        next.setDate(now.getDate() + daysUntilTarget);
-        
-        // Set to the specified time
-        next.setHours(schedule.hour, schedule.minute, 0, 0);
-        
-        // If the time has already passed today and it's the target day, schedule for next week
-        if (daysUntilTarget === 0 && now.getTime() >= next.getTime()) {
-            next.setDate(next.getDate() + 7);
+        // Set reference to "now" in America/New_York time zone
+        let now = DateTime.now().setZone("America/New_York");
+        let next = now
+            .set({ 
+                weekday: schedule.dayOfWeek === 0 ? 7 : schedule.dayOfWeek, // luxon: 1=Monday, 7=Sunday
+                hour: schedule.hour, minute: schedule.minute, second: 0, millisecond: 0
+            });
+
+        if (next < now) {
+            // If already passed, go to next week
+            next = next.plus({ weeks: 1 });
         }
-        
-        return next;
+        return next;  // retains America/New_York time zone!
     }
 
     async checkScheduledPolls() {

@@ -24,6 +24,11 @@ const defaultTemplates = {
             description: 'Schedule next session',
             emoji: '📅',
             isDynamic: true,
+            autoSchedule: {
+                dayOfWeek: 0,    // 0 = Sunday
+                hour: 22,        // 22 = 10pm
+                minute: 0
+            },
             generateOptions: function() {
                 const options = [];
                 const today = new Date();

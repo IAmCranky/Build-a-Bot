@@ -2,7 +2,7 @@
   "name": "build-a-bot",
   "version": "1.0.0",
   "description": "Welcome to Build-a-Bot! An open-source framework for building your very own Discord bot.",
-  "main": "index.js",
+  "main": "bot.js",
   "dependencies": {
     "accepts": "^2.0.0",
     "axios": "^1.10.0",
@@ -45,6 +45,7 @@
     "is-promise": "^4.0.0",
     "lodash": "^4.17.21",
     "lodash.snakecase": "^4.1.1",
+    "luxon": "^3.6.1",
     "magic-bytes.js": "^1.12.1",
     "math-intrinsics": "^1.1.0",
     "media-typer": "^1.1.0",

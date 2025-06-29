@@ -36,28 +36,7 @@ cat requirements.txt | xargs npm install -g
     - This will authenticate you to run admin-level commands.
 
 
-- Bot.js is the mian script. To start the bot:
+- bot.js is the mian script. To start the bot:
 ```sh
-npm .
+npm bot.js
 ```
-
-- To add the users and channels to the respective.json:
-```sh
-run !addallusers and !addallchannels as the admin.
-```
-
-The bot is now full functional! 🎉
-
-## 3. Some files you can edit, and what they do:
-
-- **functions.js:**
-    contains the logic for bot actions and are called at the top of bot.js
-
-- **Phrases.json:**
-    contains a list of phrases that can be called on speciifically, or randomly, within bot.js
-
-- **emojis.json:**
-    contains a list of emojis
-
-- **users.json & channels.json:**
-    lists of object names mapped to their ID's. This is helpful for calling an object in the bot.js script without needing to know it's ID.
