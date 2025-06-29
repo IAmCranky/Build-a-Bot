@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, MessageFlags } = require('discord.js');
-const templateLoader = require('../../utils/templateLoader');
+const templateLoader = require('../../utils/polls/templateLoader');
 const pollManager = require('../../data/pollManager');
 const { createPollEmbed } = require('../../utils/polls/pollEmbed');
 const { createPollButtons } = require('../../utils/polls/pollButtons');
