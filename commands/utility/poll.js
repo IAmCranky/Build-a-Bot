@@ -1,8 +1,8 @@
 const { SlashCommandBuilder } = require('discord.js');
 const pollManager = require('../../data/pollManager.js');
-const { createPollEmbed } = require('../../utils/pollEmbed.js');
-const { createPollButtons } = require('../../utils/pollButtons.js');
-const { validatePollOptions, generatePollId, createPollData } = require('../../utils/pollHelpers.js');
+const { createPollEmbed } = require('../../utils/polls/pollEmbed.js');
+const { createPollButtons } = require('../../utils/polls/pollButtons.js');
+const { validatePollOptions, generatePollId, createPollData } = require('../../utils/polls/pollHelpers.js');
 const { endPollById } = require('../../events/pollInteractionHandler.js');
 
 module.exports = {

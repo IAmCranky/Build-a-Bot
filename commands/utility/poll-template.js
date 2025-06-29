@@ -1,45 +1,46 @@
-// commands/utility/poll-template.js
 const { SlashCommandBuilder, MessageFlags } = require('discord.js');
 const templateLoader = require('../../utils/templateLoader');
 const pollManager = require('../../data/pollManager');
-const { createPollEmbed } = require('../../utils/pollEmbed');
-const { createPollButtons } = require('../../utils/pollButtons');
-const { generatePollId, createPollData } = require('../../utils/pollHelpers');
+const { createPollEmbed } = require('../../utils/polls/pollEmbed');
+const { createPollButtons } = require('../../utils/polls/pollButtons');
+const { generatePollId, createPollData } = require('../../utils/polls/pollHelpers');
 const { endPollById } = require('../../events/pollInteractionHandler');
 
-// Build choices for the slash command
 function buildTemplateChoices() {
     const choices = [];
     
     try {
         // Add regular templates
         const templates = templateLoader.getAllTemplates();
-        Object.keys(templates).forEach(key => {
-            const template = templates[key];
-            choices.push({
-                name: `${template.emoji} ${template.name}`,
-                value: `template:${key}`
+        if (templates) {
+            Object.entries(templates).forEach(([key, template]) => {
+                const emoji = template.emoji || '📊';
+                choices.push({
+                    name: `${emoji} ${template.name}`,
+                    value: `template:${key}`
+                });
             });
-        });
+        }
         
         // Add quick polls
         const quickPolls = templateLoader.getAllQuickPolls();
-        Object.keys(quickPolls).forEach(key => {
-            const quickPoll = quickPolls[key];
-            choices.push({
-                name: `🚀 ${quickPoll.name} (Quick)`,
-                value: `quick:${key}`
+        if (quickPolls) {
+            Object.entries(quickPolls).forEach(([key, options]) => {
+                choices.push({
+                    name: `🚀 ${key.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())} (Quick)`,
+                    value: `quick:${key}`
+                });
             });
-        });
+        }
         
-        console.log(`✅ Built ${choices.length} template choices`);
         return choices.slice(0, 25); // Discord limit
         
     } catch (error) {
         console.error('Error building template choices:', error);
         return [
             { name: '✅ Yes/No Poll', value: 'template:yes-no' },
-            { name: '⭐ 5-Star Rating', value: 'template:rating-5' }
+            { name: '⭐ Rating Poll', value: 'template:rating' },
+            { name: '📅 Next Session', value: 'template:session-plan' }
         ];
     }
 }
@@ -61,7 +62,7 @@ module.exports = {
                 .setRequired(true))
         .addIntegerOption(option =>
             option.setName('duration')
-                .setDescription('Poll duration in minutes (overrides template default)')
+                .setDescription('Poll duration in minutes (default: 60)')
                 .setMinValue(1)
                 .setMaxValue(1440))
         .addBooleanOption(option =>
@@ -69,11 +70,9 @@ module.exports = {
                 .setDescription('Hide who voted (default: false)'))
         .addStringOption(option =>
             option.setName('custom-options')
-                .setDescription('Add custom options (semicolon separated) - will be added to template options')),
+                .setDescription('Add custom options (semicolon separated)')),
 
     async execute(interaction) {
-        console.log(`🔧 Poll template command executed by ${interaction.user.tag}`);
-        
         try {
             const templateChoice = interaction.options.getString('template');
             const question = interaction.options.getString('question');
@@ -81,71 +80,70 @@ module.exports = {
             const anonymous = interaction.options.getBoolean('anonymous') || false;
             const customOptions = interaction.options.getString('custom-options');
 
-            console.log(`🔧 Template choice: ${templateChoice}`);
-            console.log(`🔧 Question: ${question}`);
-
             // Parse template choice
             const [type, key] = templateChoice.split(':');
-            let templateData;
+            let templateData, options;
             
             if (type === 'template') {
                 templateData = templateLoader.getTemplate(key);
+                // Handle dynamic templates
+                if (templateData?.isDynamic && templateData.generateOptions) {
+                    options = templateData.generateOptions();
+                } else {
+                    options = templateData?.options || [];
+                }
+            // In the execute function where you handle quick polls
             } else if (type === 'quick') {
-                templateData = templateLoader.getQuickPoll(key);
-            }
+                const quickPoll = pollTemplates.quickPolls[key];
+                if (!quickPoll) {
+                    return interaction.reply({
+                        content: '❌ Quick poll not found!',
+                        flags: MessageFlags.Ephemeral
+                    });
+                }
+    
+    templateData = { 
+        name: key.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase()),
+        emoji: '🚀',
+        defaultDuration: quickPoll.defaultDuration || 60
+    };
+    options = quickPoll.options;
+}
 
-            if (!templateData) {
-                console.log(`❌ Template not found: ${type}:${key}`);
+            if (!templateData || !options?.length) {
                 return interaction.reply({
                     content: '❌ Invalid template selected! Please try again.',
                     flags: MessageFlags.Ephemeral
                 });
             }
 
-            console.log(`✅ Template found: ${templateData.name}`);
-
-            // Build options array
-            let options = [...templateData.options];
-            
             // Add custom options if provided
             if (customOptions) {
                 const additionalOptions = customOptions.split(';')
                     .map(opt => opt.trim())
                     .filter(opt => opt.length > 0);
                 options = [...options, ...additionalOptions];
-                console.log(`🔧 Added ${additionalOptions.length} custom options`);
             }
 
             // Validate total options
             if (options.length > 10) {
                 return interaction.reply({
-                    content: '❌ Too many options! Maximum 10 options allowed (including custom ones).',
+                    content: '❌ Too many options! Maximum 10 options allowed.',
                     flags: MessageFlags.Ephemeral
                 });
             }
 
-            // Determine duration
+            // Create and store poll
             const duration = customDuration || templateData.defaultDuration || 60;
-            console.log(`🔧 Poll duration: ${duration} minutes`);
-
-            // Create poll ID
             const pollId = generatePollId(interaction.user.id);
-            console.log(`🔧 Creating poll with ID: ${pollId}`);
-
-            // Create poll data
             const pollData = createPollData(question, options, duration, anonymous, interaction.user.id);
             
-            // Store poll data
             pollManager.createPoll(pollId, pollData);
-            console.log(`✅ Poll stored in manager`);
 
             // Create embed and buttons
-            console.log(`🔧 Creating embed and buttons`);
             const embed = createPollEmbed(pollData);
-            
-            // Add template info to embed
             embed.setAuthor({ 
-                name: `${templateData.emoji || '📊'} ${templateData.name || 'Template Poll'}`,
+                name: `${templateData.emoji || '📊'} ${templateData.name}`,
                 iconURL: interaction.user.displayAvatarURL()
             });
             
@@ -156,40 +154,27 @@ module.exports = {
             }
 
             const buttons = createPollButtons(options, pollId);
-            console.log(`🔧 Created ${buttons.length} button rows`);
 
-            // Send the poll
-            console.log(`🔧 Sending poll response`);
             await interaction.reply({
                 embeds: [embed],
                 components: buttons
             });
 
-            console.log(`✅ Poll sent successfully`);
-
-            // Set timeout to end poll
-            setTimeout(() => {
-                console.log(`⏰ Auto-ending poll: ${pollId}`);
-                endPollById(pollId, interaction);
-            }, duration * 60 * 1000);
+            // Auto-end poll after duration
+            setTimeout(() => endPollById(pollId, interaction), duration * 60 * 1000);
 
         } catch (error) {
-            console.error('❌ Error in poll-template execute:', error);
+            console.error('Error in poll-template execute:', error);
             
-            try {
-                if (interaction.replied || interaction.deferred) {
-                    await interaction.followUp({
-                        content: '❌ Failed to create poll. Please try again.',
-                        flags: MessageFlags.Ephemeral
-                    });
-                } else {
-                    await interaction.reply({
-                        content: '❌ Failed to create poll. Please try again.',
-                        flags: MessageFlags.Ephemeral
-                    });
-                }
-            } catch (replyError) {
-                console.error('❌ Error sending error reply:', replyError);
+            const errorMessage = {
+                content: '❌ Failed to create poll. Please try again.',
+                flags: MessageFlags.Ephemeral
+            };
+
+            if (interaction.replied || interaction.deferred) {
+                await interaction.followUp(errorMessage);
+            } else {
+                await interaction.reply(errorMessage);
             }
         }
     }

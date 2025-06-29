@@ -18,7 +18,45 @@ const defaultTemplates = {
             description: '1-5 star rating system',
             emoji: '⭐',
             defaultDuration: 60
-        }
+        },
+/*        'session-plan': {
+            name: 'Next Session',
+            description: 'Schedule next session',
+            emoji: '📅',
+            isDynamic: true,
+            generateOptions: function() {
+                const options = [];
+                const today = new Date();
+    
+                // Find the next Sunday
+                let nextSunday = new Date(today);
+                const daysUntilSunday = (7 - today.getDay()) % 7;
+    
+                // If today is Sunday, go to next Sunday
+                if (today.getDay() === 0) {
+                    nextSunday.setDate(today.getDate() + 7);
+                } else {
+                    nextSunday.setDate(today.getDate() + daysUntilSunday);
+                }
+    
+                // Generate 3 consecutive Sundays from that point
+                for (let i = 0; i < 3; i++) {
+                    const optionDate = new Date(nextSunday);
+                    optionDate.setDate(nextSunday.getDate() + (i * 7));
+        
+                    const formattedDate = optionDate.toLocaleDateString('en-US', {
+                        weekday: 'long',
+                        month: 'short',
+                        day: 'numeric'
+                    });
+        
+                    options.push(`📅 ${formattedDate}`);
+                }
+    
+                options.push('❌ None of these work');
+                return options;
+            }
+        }       */
     },
     quickPolls: {},
     categories: {}

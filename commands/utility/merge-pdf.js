@@ -87,7 +87,7 @@ module.exports = {
 
             const pdfBytes = await mergedPdf.save();
             const attachment = new AttachmentBuilder(Buffer.from(pdfBytes), { 
-                name: `merged_${pdfs.length}_files_${Date.now()}.pdf` 
+                name: `merged_files_${Date.now()}.pdf` 
             });
 
             await interaction.editReply({

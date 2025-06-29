@@ -38,4 +38,15 @@ for (const file of eventFiles) {
     }
 }
 
+// In your main bot file
+const pollScheduler = require('./utils/polls/pollScheduler');
+
+client.once('ready', () => {
+    console.log(`Logged in as ${client.user.tag}!`);
+    
+    // Set up the session poll scheduler
+    const sessionChannelId = 'YOUR_CHANNEL_ID_HERE'; // Replace with your channel ID
+    pollScheduler.setupSessionPoll(sessionChannelId, client);
+});
+
 client.login(token);
